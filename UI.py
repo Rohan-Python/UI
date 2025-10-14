@@ -1,5 +1,4 @@
 import streamlit as st
-import webbrowser
 
 # ---------------------- COMPANY & PRODUCT DATA ----------------------
 COMPANY = {
@@ -34,15 +33,34 @@ LOGIC = {
     "Precast Element": "Bajaj Fibre Tuff",
 }
 
+# ---------------------- IMAGE URLS (use GitHub raw URLs) ----------------------
+# Replace "your-username" and "your-repo" with your GitHub repo path
+IMG_BASE = "https://raw.githubusercontent.com/your-username/your-repo/main/"
 
-# ---------------------- STREAMLIT LAYOUT ----------------------
+IMAGES = {
+    "bajaj": IMG_BASE + "bajaj.png",
+    "tuff": IMG_BASE + "tuff.png",
+    "guard": IMG_BASE + "guard.png"
+}
+
+# ---------------------- PAGE CONFIG ----------------------
 st.set_page_config(page_title="Bajaj Reinforcements - Fiber Dosage Assistant", layout="wide")
 
-st.markdown("<h1 style='color:red;'>Bajaj Reinforcements</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='color:grey;margin-top:-15px;'>Muscle to your concrete</h3>", unsafe_allow_html=True)
-st.markdown(f"**{GSTIN}**")
+# ---------------------- HEADER ----------------------
+col1, col2, col3 = st.columns([1, 3, 1])
+with col1:
+    st.image(IMAGES["bajaj"], width=110)
+with col2:
+    st.markdown("<h1 style='text-align:center;color:red;'>Bajaj Reinforcements</h1>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align:center;color:grey;margin-top:-15px;'>Muscle to your concrete</h4>", unsafe_allow_html=True)
+with col3:
+    st.image(IMAGES["tuff"], width=80)
+    st.image(IMAGES["guard"], width=80)
+
+st.markdown(f"### {GSTIN}")
 st.write("---")
 
+# ---------------------- TABS ----------------------
 tab1, tab2 = st.tabs(["🧮 Dosage Suggestion", "📦 Order & Delivery"])
 
 # ---------------------- TAB 1 ----------------------
@@ -57,7 +75,6 @@ with tab1:
         strength = st.selectbox("Structural Requirement", ["Low Toughness","Medium Toughness","High Toughness"], index=1)
         volume = st.number_input("Application Volume (m³)", min_value=0.0, value=10.0, step=1.0)
 
-    # Suggestion logic
     if st.button("Suggest Dosage", use_container_width=True, type="primary"):
         product = LOGIC.get(ctype, "Bajaj Fibre Tuff")
         p = PRODUCTS[product]
@@ -83,14 +100,14 @@ with tab1:
             "est_cost": est_cost
         }
 
-        st.success(f"**Suggestion Ready!**")
-        st.write(f"**Product:** {product}")
-        st.write(f"**Fiber Type:** {p['fiber_type']}")
-        st.write(f"**Suggested Dosage:** {typical} kg/m³")
-        st.write(f"**Total Quantity:** {total_qty} kg")
-        st.write(f"**Estimated Cost:** ₹{est_cost:,.2f}")
-
         st.session_state["suggestion"] = suggestion
+
+        st.success("### Suggestion Ready!")
+        st.markdown(f"**Product:** {product}")
+        st.markdown(f"**Fiber Type:** {p['fiber_type']}")
+        st.markdown(f"**Suggested Dosage:** {typical} kg/m³")
+        st.markdown(f"**Total Quantity:** {total_qty} kg")
+        st.markdown(f"**Estimated Cost:** ₹{est_cost:,.2f}")
 
 # ---------------------- TAB 2 ----------------------
 with tab2:
