@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import date
 
 # ---------------------- COMPANY & PRODUCT DATA ----------------------
 COMPANY = {
@@ -33,10 +34,8 @@ LOGIC = {
     "Precast Element": "Bajaj Fibre Tuff",
 }
 
-# ---------------------- IMAGE URLS (use GitHub raw URLs) ----------------------
-# Replace "your-username" and "your-repo" with your GitHub repo path
+# ---------------------- IMAGE URLS ----------------------
 IMG_BASE = "https://raw.githubusercontent.com/Rohan-Python/UI/main/"
-
 IMAGES = {
     "bajaj": IMG_BASE + "bajaj.png",
     "tuff": IMG_BASE + "tuff.png",
@@ -99,7 +98,6 @@ with tab1:
             "rate": p["rate"],
             "est_cost": est_cost
         }
-
         st.session_state["suggestion"] = suggestion
 
         st.success("### Suggestion Ready!")
@@ -111,10 +109,11 @@ with tab1:
 
 # ---------------------- TAB 2 ----------------------
 with tab2:
-    st.header("Order & Rate Details")
-    suggestion = st.session_state.get("suggestion", None)
+    st.header("Order & Delivery Details")
 
+    suggestion = st.session_state.get("suggestion", None)
     if suggestion:
+        st.subheader("📦 Product & Cost Summary")
         st.table({
             "Field": [
                 "Product", "Type of Fiber", "Dosage (kg/m³)",
@@ -128,6 +127,41 @@ with tab2:
         })
     else:
         st.info("No dosage suggestion yet. Please use the first tab to generate a suggestion.")
+
+    st.write("---")
+    st.subheader("🚚 Customer & Delivery Information")
+
+    with st.form("delivery_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            cust_name = st.text_input("Full Name *")
+            company = st.text_input("Company / Organization")
+            contact = st.text_input("Contact Number *")
+            email = st.text_input("Email ID")
+        with col2:
+            address = st.text_area("Delivery Address *", height=120)
+            city = st.text_input("City")
+            state = st.text_input("State")
+            delivery_date = st.date_input("Preferred Delivery Date", value=date.today())
+
+        submitted = st.form_submit_button("Confirm Order", type="primary", use_container_width=True)
+
+        if submitted:
+            if not cust_name or not contact or not address:
+                st.error("⚠️ Please fill all required (*) fields before confirming.")
+            else:
+                st.success("✅ Order Submitted Successfully!")
+                st.markdown(f"""
+                **Customer Name:** {cust_name}  
+                **Company:** {company or '—'}  
+                **Contact:** {contact}  
+                **Email:** {email or '—'}  
+                **Address:** {address}, {city or ''}, {state or ''}  
+                **Preferred Delivery:** {delivery_date.strftime('%d %b %Y')}  
+                """)
+
+                if suggestion:
+                    st.info(f"**Order Summary:** {suggestion['product']} — {suggestion['total_qty']} kg @ ₹{suggestion['rate']}/kg = ₹{suggestion['est_cost']:,.2f}")
 
 # ---------------------- FOOTER ----------------------
 st.write("---")
