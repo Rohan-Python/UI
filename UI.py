@@ -35,7 +35,7 @@ LOGIC = {
 
 # ---------------------- IMAGE URLS (use GitHub raw URLs) ----------------------
 # Replace "your-username" and "your-repo" with your GitHub repo path
-IMG_BASE = "https://raw.githubusercontent.com/your-username/your-repo/main/"
+IMG_BASE = "https://raw.githubusercontent.com/Rohan-Python/UI/main/"
 
 IMAGES = {
     "bajaj": IMG_BASE + "bajaj.png",
