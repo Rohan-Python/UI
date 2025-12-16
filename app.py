@@ -62,7 +62,22 @@ if selected_exec != "All":
 # ---------------------------------------------------
 # Map
 # ---------------------------------------------------
-m = folium.Map(location=[16.0, 78.0], zoom_start=6, tiles="OpenStreetMap")
+# ---------------------------------------------------
+# Map (India Only)
+# ---------------------------------------------------
+INDIA_BOUNDS = [[6.5, 68.0], [37.5, 97.5]]
+
+m = folium.Map(
+    location=[22.0, 78.0],   # Center of India
+    zoom_start=5,
+    tiles="OpenStreetMap",
+    min_zoom=4,
+    max_bounds=True
+)
+
+m.fit_bounds(INDIA_BOUNDS)
+m.options['maxBounds'] = INDIA_BOUNDS
+
 
 # Sales Executives Markers
 for _, row in sales_df.iterrows():
@@ -112,3 +127,4 @@ suggestions = (
 
 st.success("Suggested nearest project for each sales executive:")
 st.table(suggestions)
+
