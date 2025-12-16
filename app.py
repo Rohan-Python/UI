@@ -3,18 +3,22 @@ import pandas as pd
 import folium
 from geopy.distance import geodesic
 from streamlit_folium import st_folium
+import os
 
 st.set_page_config(layout="wide")
 st.title("📍 Sales Executive & Project Tracking Dashboard")
 
-# Load data
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE_DIR, "data.xlsx")
+
 @st.cache_data
 def load_data():
-    sales = pd.read_excel("data1.xlsx", sheet_name="sales_executives")
-    projects = pd.read_excel("data1.xlsx", sheet_name="projects")
+    sales = pd.read_excel(DATA_FILE, sheet_name="sales_executives")
+    projects = pd.read_excel(DATA_FILE, sheet_name="projects")
     return sales, projects
 
 sales_df, project_df = load_data()
+
 
 # ---------------------------------------------------
 # Distance Calculation
@@ -108,3 +112,4 @@ suggestions = (
 
 st.success("Suggested nearest project for each sales executive:")
 st.table(suggestions)
+
