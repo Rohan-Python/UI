@@ -1,7 +1,26 @@
 import streamlit as st
 from datetime import date
 
-# ---------------------- COMPANY & PRODUCT DATA ----------------------
+# ---------------------- PAGE CONFIG ----------------------
+st.set_page_config(
+    page_title="Bajaj Reinforcements – Fiber Assistant",
+    layout="wide"
+)
+
+# ---------------------- SESSION STATE ----------------------
+if "active_section" not in st.session_state:
+    st.session_state.active_section = "Bajaj Guard"
+
+if "suggestion" not in st.session_state:
+    st.session_state.suggestion = None
+
+if "cart" not in st.session_state:
+    st.session_state.cart = None
+
+if "page" not in st.session_state:
+    st.session_state.page = "browse"
+
+# ---------------------- COMPANY DATA ----------------------
 COMPANY = {
     "website": "https://www.brllp.in",
     "email": "info@brllp.in",
@@ -9,21 +28,22 @@ COMPANY = {
 }
 GSTIN = "GSTIN: 27ABCDE1234F1Z5"
 
+# ---------------------- PRODUCT DATA ----------------------
 PRODUCTS = {
     "Bajaj Guard": {
         "fiber_type": "Fibrillated Polypropylene Microfiber (6 mm)",
         "dosage_range": (0.6, 1.0),
-        "rate": 180.0,
-        "use_for": "Shrinkage crack control, plaster, screed, decorative & light slabs",
+        "rate": 180,
+        "use_for": "Shrinkage crack control, plaster, screed, decorative slabs",
         "image": "guard_fiber.png"
     },
     "Bajaj Fibre Tuff": {
         "fiber_type": "Macro Synthetic Polymer Fiber (36–54 mm)",
         "dosage_range": (2.5, 9.0),
-        "rate": 350.0,
+        "rate": 350,
         "use_for": "Structural reinforcement, industrial floors, pavements, precast",
         "image": "tuff_fiber.png"
-    },
+    }
 }
 
 LOGIC = {
@@ -36,19 +56,13 @@ LOGIC = {
     "Precast Element": "Bajaj Fibre Tuff",
 }
 
-# ---------------------- PAGE CONFIG ----------------------
-st.set_page_config(page_title="Bajaj Reinforcements - Fiber Dosage Assistant", layout="wide")
-
-# ---------------------- HEADER ----------------------
+# ====================== HEADER ======================
 st.markdown("<h1 style='text-align:center;color:red;'>Bajaj Reinforcements</h1>", unsafe_allow_html=True)
 st.markdown("<h4 style='text-align:center;color:grey;margin-top:-10px;'>Muscle to your concrete</h4>", unsafe_allow_html=True)
 st.markdown(f"**{GSTIN}**")
 st.write("---")
 
-# ---------------------- SECTION SWITCH BUTTONS ----------------------
-if "active_section" not in st.session_state:
-    st.session_state.active_section = "Bajaj Guard"
-
+# ====================== TOP SECTION BUTTONS ======================
 c1, c2 = st.columns(2)
 with c1:
     if st.button("🧪 Bajaj Guard Fiber", use_container_width=True):
@@ -59,26 +73,40 @@ with c2:
 
 st.write("---")
 
-# ---------------------- ACTIVE SECTION ----------------------
-active_product = st.session_state.active_section
-pdata = PRODUCTS[active_product]
+# ====================== FIBER SECTION ======================
+active = st.session_state.active_section
+pdata = PRODUCTS[active]
 
-st.subheader(f"{active_product}")
+st.subheader(active)
 st.caption(pdata["use_for"])
 
-img_col, info_col = st.columns([1, 2])
-with img_col:
-    st.image(pdata["image"], caption=f"{active_product} – actual fiber view", use_container_width=True)
-with info_col:
+col_img, col_info = st.columns([1, 2])
+with col_img:
+    st.image(pdata["image"], caption="Actual fiber (zoomed view)", use_container_width=True)
+
+with col_info:
     st.markdown(f"""
     **Fiber Type:** {pdata["fiber_type"]}  
     **Recommended Dosage Range:** {pdata["dosage_range"][0]} – {pdata["dosage_range"][1]} kg/m³  
     **Typical Applications:** {pdata["use_for"]}
     """)
 
+# ---------------- BUY / CART BUTTONS ----------------
+b1, b2 = st.columns(2)
+with b1:
+    if st.button("🛒 Add to Cart", use_container_width=True):
+        st.session_state.cart = {"product": active, "rate": pdata["rate"]}
+        st.success("Added to cart")
+
+with b2:
+    if st.button("⚡ Buy Now", type="primary", use_container_width=True):
+        st.session_state.cart = {"product": active, "rate": pdata["rate"]}
+        st.session_state.page = "checkout"
+        st.experimental_rerun()
+
 st.write("---")
 
-# ---------------------- DOSAGE SUGGESTION ----------------------
+# ====================== DOSAGE SUGGESTION ======================
 st.header("🧮 Dosage Suggestion")
 
 c1, c2 = st.columns(2)
@@ -87,62 +115,98 @@ with c1:
     grade = st.selectbox("Concrete Grade", ["M20","M25","M30","M35","M40","M45","M50"], index=2)
 with c2:
     strength = st.selectbox("Structural Requirement", ["Low Toughness","Medium Toughness","High Toughness"], index=1)
-    volume = st.number_input("Application Volume (m³)", min_value=0.0, value=10.0, step=1.0)
+    volume = st.number_input("Application Volume (m³)", min_value=1.0, value=10.0)
 
 if st.button("Suggest Dosage", type="primary", use_container_width=True):
-    product = LOGIC.get(ctype, "Bajaj Fibre Tuff")
+    product = LOGIC.get(ctype)
     p = PRODUCTS[product]
     mn, mx = p["dosage_range"]
 
     if strength == "High Toughness":
-        typical = round(mn + (mx - mn) * 0.7, 2)
+        dosage = mn + (mx - mn) * 0.7
     elif strength == "Low Toughness":
-        typical = round(mn + (mx - mn) * 0.3, 2)
+        dosage = mn + (mx - mn) * 0.3
     else:
-        typical = round((mn + mx) / 2, 2)
+        dosage = (mn + mx) / 2
 
-    total_qty = round(typical * volume, 2)
-    est_cost = round(total_qty * p["rate"], 2)
+    total_qty = round(dosage * volume, 2)
+    cost = round(total_qty * p["rate"], 2)
 
-    st.session_state["suggestion"] = {
+    st.session_state.suggestion = {
         "product": product,
         "fiber_type": p["fiber_type"],
-        "dosage": typical,
+        "dosage": round(dosage,2),
         "volume": volume,
         "total_qty": total_qty,
         "rate": p["rate"],
-        "est_cost": est_cost
+        "cost": cost
     }
 
     st.success("### ✅ Suggested Solution")
     st.markdown(f"""
-    **Recommended Product:** {product}  
+    **Product:** {product}  
     **Fiber Type:** {p["fiber_type"]}  
-    **Dosage:** {typical} kg/m³  
+    **Dosage:** {dosage:.2f} kg/m³  
     **Total Quantity:** {total_qty} kg  
-    **Estimated Cost:** ₹{est_cost:,.2f}
+    **Estimated Cost:** ₹{cost:,.2f}
     """)
 
-# ---------------------- ORDER TAB ----------------------
-st.write("---")
-st.header("📦 Order & Delivery")
+# ====================== CHECKOUT PAGE ======================
+if st.session_state.page == "checkout":
+    st.write("---")
+    st.header("📦 Delivery & Checkout")
 
-suggestion = st.session_state.get("suggestion")
-if suggestion:
-    st.table({
-        "Field": [
-            "Product", "Type of Fiber", "Dosage (kg/m³)",
-            "Volume (m³)", "Total Qty (kg)", "Rate (₹/kg)", "Cost (₹)"
-        ],
-        "Value": [
-            suggestion["product"], suggestion["fiber_type"], suggestion["dosage"],
-            suggestion["volume"], suggestion["total_qty"], suggestion["rate"], suggestion["est_cost"]
-        ]
-    })
-else:
-    st.info("Generate dosage suggestion above to proceed with order.")
+    cart = st.session_state.cart
+    suggestion = st.session_state.suggestion
 
-# ---------------------- FOOTER ----------------------
+    if suggestion and suggestion["product"] == cart["product"]:
+        qty = suggestion["total_qty"]
+        rate = suggestion["rate"]
+    else:
+        qty = st.number_input("Enter Quantity (kg)", min_value=1.0)
+        rate = cart["rate"]
+
+    total = qty * rate
+
+    st.subheader("🧾 Order Summary")
+    st.markdown(f"""
+    **Product:** {cart["product"]}  
+    **Quantity:** {qty} kg  
+    **Rate:** ₹{rate}/kg  
+    **Total Amount:** ₹{total:,.2f}
+    """)
+
+    st.write("---")
+    st.subheader("🚚 Delivery Address")
+
+    with st.form("delivery"):
+        name = st.text_input("Full Name *")
+        phone = st.text_input("Mobile Number *")
+        email = st.text_input("Email")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            house = st.text_input("Flat / House No *")
+            area = st.text_input("Street / Area *")
+            landmark = st.text_input("Landmark")
+        with c2:
+            city = st.text_input("City *")
+            state = st.text_input("State *")
+            pincode = st.text_input("PIN Code *")
+
+        delivery_date = st.date_input("Preferred Delivery Date", value=date.today())
+        instructions = st.text_area("Delivery Instructions")
+
+        submit = st.form_submit_button("✅ Place Order", type="primary")
+
+        if submit:
+            if not all([name, phone, house, area, city, state, pincode]):
+                st.error("Please fill all required fields.")
+            else:
+                st.success("🎉 Order Placed Successfully!")
+                st.info("Our team will contact you shortly for confirmation and dispatch.")
+
+# ====================== FOOTER ======================
 st.write("---")
 st.markdown(
     f"""
