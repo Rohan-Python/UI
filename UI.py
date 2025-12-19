@@ -14,13 +14,15 @@ PRODUCTS = {
         "fiber_type": "Fibrillated Polypropylene Microfiber (6 mm)",
         "dosage_range": (0.6, 1.0),
         "rate": 180.0,
-        "use_for": "Shrinkage / finish control (plaster, screed, light slabs)",
+        "use_for": "Shrinkage crack control, plaster, screed, decorative & light slabs",
+        "image": "guard_fiber.png"
     },
     "Bajaj Fibre Tuff": {
         "fiber_type": "Macro Synthetic Polymer Fiber (36–54 mm)",
         "dosage_range": (2.5, 9.0),
         "rate": 350.0,
-        "use_for": "Structural reinforcement (floors, pavements, runways, precast)",
+        "use_for": "Structural reinforcement, industrial floors, pavements, precast",
+        "image": "tuff_fiber.png"
     },
 }
 
@@ -34,140 +36,119 @@ LOGIC = {
     "Precast Element": "Bajaj Fibre Tuff",
 }
 
-# ---------------------- IMAGE URLS ----------------------
-IMG_BASE = "https://raw.githubusercontent.com/Rohan-Python/UI/main/"
-IMAGES = {
-    "bajaj": IMG_BASE + "bajaj.png",
-    "tuff": IMG_BASE + "tuff.png",
-    "guard": IMG_BASE + "guard.png"
-}
-
 # ---------------------- PAGE CONFIG ----------------------
 st.set_page_config(page_title="Bajaj Reinforcements - Fiber Dosage Assistant", layout="wide")
 
 # ---------------------- HEADER ----------------------
-col1, col2, col3 = st.columns([1, 3, 1])
-with col1:
-    st.image(IMAGES["bajaj"], width=110)
-with col2:
-    st.markdown("<h1 style='text-align:center;color:red;'>Bajaj Reinforcements</h1>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align:center;color:grey;margin-top:-15px;'>Muscle to your concrete</h4>", unsafe_allow_html=True)
-with col3:
-    st.image(IMAGES["tuff"], width=80)
-    st.image(IMAGES["guard"], width=80)
-
-st.markdown(f"### {GSTIN}")
+st.markdown("<h1 style='text-align:center;color:red;'>Bajaj Reinforcements</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align:center;color:grey;margin-top:-10px;'>Muscle to your concrete</h4>", unsafe_allow_html=True)
+st.markdown(f"**{GSTIN}**")
 st.write("---")
 
-# ---------------------- TABS ----------------------
-tab1, tab2 = st.tabs(["🧮 Dosage Suggestion", "📦 Order & Delivery"])
+# ---------------------- SECTION SWITCH BUTTONS ----------------------
+if "active_section" not in st.session_state:
+    st.session_state.active_section = "Bajaj Guard"
 
-# ---------------------- TAB 1 ----------------------
-with tab1:
-    st.header("Project / Concrete Details")
+c1, c2 = st.columns(2)
+with c1:
+    if st.button("🧪 Bajaj Guard Fiber", use_container_width=True):
+        st.session_state.active_section = "Bajaj Guard"
+with c2:
+    if st.button("🏗️ Bajaj Tuff Fiber", use_container_width=True):
+        st.session_state.active_section = "Bajaj Fibre Tuff"
 
-    col1, col2 = st.columns(2)
-    with col1:
-        ctype = st.selectbox("Type of Construction", list(LOGIC.keys()), index=2)
-        grade = st.selectbox("Concrete Grade", ["M20","M25","M30","M35","M40","M45","M50"], index=2)
-    with col2:
-        strength = st.selectbox("Structural Requirement", ["Low Toughness","Medium Toughness","High Toughness"], index=1)
-        volume = st.number_input("Application Volume (m³)", min_value=0.0, value=10.0, step=1.0)
+st.write("---")
 
-    if st.button("Suggest Dosage", use_container_width=True, type="primary"):
-        product = LOGIC.get(ctype, "Bajaj Fibre Tuff")
-        p = PRODUCTS[product]
-        mn, mx = p["dosage_range"]
+# ---------------------- ACTIVE SECTION ----------------------
+active_product = st.session_state.active_section
+pdata = PRODUCTS[active_product]
 
-        if strength == "High Toughness":
-            typical = round(mn + (mx - mn) * 0.7, 2)
-        elif strength == "Low Toughness":
-            typical = round(mn + (mx - mn) * 0.3, 2)
-        else:
-            typical = round((mn + mx) / 2, 2)
+st.subheader(f"{active_product}")
+st.caption(pdata["use_for"])
 
-        total_qty = round(typical * volume, 2)
-        est_cost = round(total_qty * p["rate"], 2)
+img_col, info_col = st.columns([1, 2])
+with img_col:
+    st.image(pdata["image"], caption=f"{active_product} – actual fiber view", use_container_width=True)
+with info_col:
+    st.markdown(f"""
+    **Fiber Type:** {pdata["fiber_type"]}  
+    **Recommended Dosage Range:** {pdata["dosage_range"][0]} – {pdata["dosage_range"][1]} kg/m³  
+    **Typical Applications:** {pdata["use_for"]}
+    """)
 
-        suggestion = {
-            "product": product,
-            "fiber_type": p["fiber_type"],
-            "dosage": typical,
-            "volume": volume,
-            "total_qty": total_qty,
-            "rate": p["rate"],
-            "est_cost": est_cost
-        }
-        st.session_state["suggestion"] = suggestion
+st.write("---")
 
-        st.success("### Suggestion Ready!")
-        st.markdown(f"**Product:** {product}")
-        st.markdown(f"**Fiber Type:** {p['fiber_type']}")
-        st.markdown(f"**Suggested Dosage:** {typical} kg/m³")
-        st.markdown(f"**Total Quantity:** {total_qty} kg")
-        st.markdown(f"**Estimated Cost:** ₹{est_cost:,.2f}")
+# ---------------------- DOSAGE SUGGESTION ----------------------
+st.header("🧮 Dosage Suggestion")
 
-# ---------------------- TAB 2 ----------------------
-with tab2:
-    st.header("Order & Delivery Details")
+c1, c2 = st.columns(2)
+with c1:
+    ctype = st.selectbox("Type of Construction", list(LOGIC.keys()), index=2)
+    grade = st.selectbox("Concrete Grade", ["M20","M25","M30","M35","M40","M45","M50"], index=2)
+with c2:
+    strength = st.selectbox("Structural Requirement", ["Low Toughness","Medium Toughness","High Toughness"], index=1)
+    volume = st.number_input("Application Volume (m³)", min_value=0.0, value=10.0, step=1.0)
 
-    suggestion = st.session_state.get("suggestion", None)
-    if suggestion:
-        st.subheader("📦 Product & Cost Summary")
-        st.table({
-            "Field": [
-                "Product", "Type of Fiber", "Dosage (kg/m³)",
-                "Application Volume (m³)", "Total Quantity (kg)",
-                "Rate (₹/kg)", "Estimated Cost (₹)"
-            ],
-            "Value": [
-                suggestion["product"], suggestion["fiber_type"], suggestion["dosage"],
-                suggestion["volume"], suggestion["total_qty"], suggestion["rate"], suggestion["est_cost"]
-            ]
-        })
+if st.button("Suggest Dosage", type="primary", use_container_width=True):
+    product = LOGIC.get(ctype, "Bajaj Fibre Tuff")
+    p = PRODUCTS[product]
+    mn, mx = p["dosage_range"]
+
+    if strength == "High Toughness":
+        typical = round(mn + (mx - mn) * 0.7, 2)
+    elif strength == "Low Toughness":
+        typical = round(mn + (mx - mn) * 0.3, 2)
     else:
-        st.info("No dosage suggestion yet. Please use the first tab to generate a suggestion.")
+        typical = round((mn + mx) / 2, 2)
 
-    st.write("---")
-    st.subheader("🚚 Customer & Delivery Information")
+    total_qty = round(typical * volume, 2)
+    est_cost = round(total_qty * p["rate"], 2)
 
-    with st.form("delivery_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            cust_name = st.text_input("Full Name *")
-            company = st.text_input("Company / Organization")
-            contact = st.text_input("Contact Number *")
-            email = st.text_input("Email ID")
-        with col2:
-            address = st.text_area("Delivery Address *", height=120)
-            city = st.text_input("City")
-            state = st.text_input("State")
-            delivery_date = st.date_input("Preferred Delivery Date", value=date.today())
+    st.session_state["suggestion"] = {
+        "product": product,
+        "fiber_type": p["fiber_type"],
+        "dosage": typical,
+        "volume": volume,
+        "total_qty": total_qty,
+        "rate": p["rate"],
+        "est_cost": est_cost
+    }
 
-        submitted = st.form_submit_button("Confirm Order", type="primary", use_container_width=True)
+    st.success("### ✅ Suggested Solution")
+    st.markdown(f"""
+    **Recommended Product:** {product}  
+    **Fiber Type:** {p["fiber_type"]}  
+    **Dosage:** {typical} kg/m³  
+    **Total Quantity:** {total_qty} kg  
+    **Estimated Cost:** ₹{est_cost:,.2f}
+    """)
 
-        if submitted:
-            if not cust_name or not contact or not address:
-                st.error("⚠️ Please fill all required (*) fields before confirming.")
-            else:
-                st.success("✅ Order Submitted Successfully!")
-                st.markdown(f"""
-                **Customer Name:** {cust_name}  
-                **Company:** {company or '—'}  
-                **Contact:** {contact}  
-                **Email:** {email or '—'}  
-                **Address:** {address}, {city or ''}, {state or ''}  
-                **Preferred Delivery:** {delivery_date.strftime('%d %b %Y')}  
-                """)
+# ---------------------- ORDER TAB ----------------------
+st.write("---")
+st.header("📦 Order & Delivery")
 
-                if suggestion:
-                    st.info(f"**Order Summary:** {suggestion['product']} — {suggestion['total_qty']} kg @ ₹{suggestion['rate']}/kg = ₹{suggestion['est_cost']:,.2f}")
+suggestion = st.session_state.get("suggestion")
+if suggestion:
+    st.table({
+        "Field": [
+            "Product", "Type of Fiber", "Dosage (kg/m³)",
+            "Volume (m³)", "Total Qty (kg)", "Rate (₹/kg)", "Cost (₹)"
+        ],
+        "Value": [
+            suggestion["product"], suggestion["fiber_type"], suggestion["dosage"],
+            suggestion["volume"], suggestion["total_qty"], suggestion["rate"], suggestion["est_cost"]
+        ]
+    })
+else:
+    st.info("Generate dosage suggestion above to proceed with order.")
 
 # ---------------------- FOOTER ----------------------
 st.write("---")
 st.markdown(
     f"""
     **Quick Links:**  
-    🔗 [Visit Website]({COMPANY["website"]}) | 📧 [{COMPANY["email"]}](mailto:{COMPANY["email"]}) | ☎️ {COMPANY["phone"]}
+    🔗 [Visit Website]({COMPANY["website"]}) |
+    📧 [{COMPANY["email"]}](mailto:{COMPANY["email"]}) |
+    ☎️ {COMPANY["phone"]}
     """
 )
